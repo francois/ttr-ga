@@ -1,5 +1,7 @@
 module Main where
 
+import Data.List (nub, sort)
+
 data TrackColor = TRed
                 | TYellow
                 | TBrown
@@ -53,7 +55,30 @@ allRoutes = [ calgaryToVancouver,
               portlandToSeattle,
               seattleToVancouver]
 
-allCities = [Calgary, Portland, Seattle, Vancouver]
+allCities :: [City]
+allCities = sort $ nub $ concat [ [a, b] | (Route a b _) <- allRoutes ]
+
+connect :: (City, City) -> [Route]
+connect (a, b) = undefined
+
+cookie :: City -> City -> [Route] -> [Route]
+cookie start dest [] = []
+cookie start dest (r:rs)
+    | start == startOfRoute r && dest == endOfRoute r = [r]
+    | dest == endOfRoute r = [r]
+    | start == startOfRoute r = r : cookie (endOfRoute r) dest rs
+
+startOfRoute :: Route -> City
+startOfRoute (Route a _ _) = a
+
+endOfRoute :: Route -> City
+endOfRoute (Route _ b _) = b
+
+routesStartingAt :: City -> [Route]
+routesStartingAt a = nub $ (++) (filter (\(Route c0 _ _) -> c0 == a) allRoutes) (filter (\(Route _ c1 _) -> c1 == a) allRoutes)
+
+allConnections :: [[Route]]
+allConnections = map connect [ (a, b) | a <- allCities, b <- allCities, a < b ]
 
 isLink :: City -> City -> Route -> Bool
 isLink a1 b1 (Route a2 b2 _) = a1 == a2 && b1 == b2
@@ -62,7 +87,7 @@ directLinkBetween :: City -> City -> [[Route]]
 directLinkBetween a b = [[ r | r <- allRoutes, isLink a b r ]]
 
 routesBetween :: City -> City -> [[Route]]
-routesBetween a b = [ [r0, r1] | r0 @ (Route c0 c1 _) <- allRoutes, r1 @ (Route c2 c3 _) <- allRoutes, c1 == c2, a == c0, b == c3]
+routesBetween a b = undefined
 
 pointsForTrack :: Int -> Int
 pointsForTrack 1 = 1
@@ -79,3 +104,6 @@ routeLength (Route _ _ t) = t
 
 pointsForRoute :: [Route] -> Int
 pointsForRoute rs = sum $ map pointsForTrack $ map routeLength rs
+
+main = do
+  print $ cookie Calgary Seattle allRoutes
