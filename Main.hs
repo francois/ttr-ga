@@ -20,16 +20,16 @@ data CardColor =  CLocomotive
                 | CBlue
       deriving (Show, Eq)
 
-data City = Vancouver
-          | Calgary
+data City = Calgary
           | Portland
           | Seattle
+          | Vancouver
       deriving (Show, Eq, Ord)
 
 data Track = Track TrackColor Int
       deriving (Show, Eq)
 
-data Route = Route City City [Track]
+data Route = Route City City Int
       deriving (Show, Eq)
 
 data Destination = Destination City City
@@ -43,22 +43,39 @@ green  = Track TGreen
 pink   = Track TPink
 blue   = Track TBlue
 
-calgaryToVancouver = Route Calgary Vancouver [gray 4]
-portlandToSeattle  = Route Portland Seattle [gray 2, gray 2]
-seattleToVancouver = Route Seattle Vancouver [gray 2, gray 2]
+calgaryToVancouver = Route Calgary Vancouver 3
+calgaryToSeattle   = Route Calgary Seattle 4
+portlandToSeattle  = Route Portland Seattle 1
+seattleToVancouver = Route Seattle Vancouver 1
 
-pointsForTrack :: Track -> Int
-pointsForTrack (Track _ 1) = 1
-pointsForTrack (Track _ 2) = 2
-pointsForTrack (Track _ 3) = 4
-pointsForTrack (Track _ 4) = 7
-pointsForTrack (Track _ 5) = 10
-pointsForTrack (Track _ 6) = 15
-pointsForTrack (Track _ 7) = 21
-pointsForTrack (Track _ 8) = undefined
+allRoutes = [ calgaryToVancouver,
+              calgaryToSeattle,
+              portlandToSeattle,
+              seattleToVancouver]
 
-firstTrackOfRoute :: Route -> Track
-firstTrackOfRoute (Route _ _ t) = head t
+allCities = [Calgary, Portland, Seattle, Vancouver]
+
+isLink :: City -> City -> Route -> Bool
+isLink a1 b1 (Route a2 b2 _) = a1 == a2 && b1 == b2
+
+directLinkBetween :: City -> City -> [[Route]]
+directLinkBetween a b = [[ r | r <- allRoutes, isLink a b r ]]
+
+routesBetween :: City -> City -> [[Route]]
+routesBetween a b = [ [r0, r1] | r0 @ (Route c0 c1 _) <- allRoutes, r1 @ (Route c2 c3 _) <- allRoutes, c1 == c2, a == c0, b == c3]
+
+pointsForTrack :: Int -> Int
+pointsForTrack 1 = 1
+pointsForTrack 2 = 2
+pointsForTrack 3 = 4
+pointsForTrack 4 = 7
+pointsForTrack 5 = 10
+pointsForTrack 6 = 15
+pointsForTrack 7 = 21
+pointsForTrack 8 = 27
+
+routeLength :: Route -> Int
+routeLength (Route _ _ t) = t
 
 pointsForRoute :: [Route] -> Int
-pointsForRoute rs = sum $ map pointsForTrack $ map firstTrackOfRoute rs
+pointsForRoute rs = sum $ map pointsForTrack $ map routeLength rs
